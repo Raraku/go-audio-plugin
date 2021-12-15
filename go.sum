@@ -1,0 +1,4 @@
+github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=
+github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/raraku/portaudio v0.0.0-20211214155807-b02d12f0556c h1:J7EdzALvoOQGdSrzg+vrn7LIosQKGWLeQq83bHfn/N4=
+github.com/raraku/portaudio v0.0.0-20211214155807-b02d12f0556c/go.mod h1:IEtsRAhbQfrl8q/3VWCqx1U2PWyE1Jy/0QEm3bDH1RQ=
