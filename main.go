@@ -12,14 +12,14 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/gordonklaus/portaudio"
 	"github.com/gorilla/websocket"
-	"github.com/raraku/portaudio"
 )
 
-const samepleRate=44100
+const samepleRate = 44100
 const seconds = 1
 
-func main(){
+func main() {
 	flag.Parse()
 	log.SetFlags(0)
 	portaudio.Initialize()
@@ -32,69 +32,70 @@ func main(){
 	// }
 
 	buffer2 := &bytes.Buffer{}
-	buffer := make([]float32, samepleRate * seconds);
-	stream, err := portaudio.OpenDefaultStream(1, 0, samepleRate, len(buffer), func(in []float32){
-		for i:= range buffer{
+	buffer := make([]float32, samepleRate*seconds)
+	stream, _ := portaudio.OpenDefaultStream(1, 0, samepleRate, len(buffer), func(in []float32) {
+		for i := range buffer {
 			buffer[i] = in[i]
 		}
 	})
-	chk(err,0)
+	// chk(err,0)
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
-	u:= url.URL{Scheme:"ws", Host:"localhost:8080", Path:"/"}
+	u := url.URL{Scheme: "ws", Host: "localhost:8080", Path: "/"}
 	log.Printf("connecting to %s", u.String())
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	log.Printf(c.LocalAddr().String())
-	chk(err,1);
+	chk(err, 1)
 	defer c.Close()
 	done := make(chan struct{})
 
-	defer close(done);
-	go func(){
-		for{
-			_, message, err := c.ReadMessage();
-			if err!= nil{
+	defer close(done)
+	go func() {
+		for {
+			_, message, err := c.ReadMessage()
+			if err != nil {
 				log.Println("read:", err)
 				return
 			}
 			log.Printf("recv: %s", message)
-		}}()
-		chk(err,2)
-		chk(stream.Start(),3)
-		
-		defer stream.Close()
+		}
+	}()
+	chk(err, 2)
+	chk(stream.Start(), 3)
 
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
+	defer stream.Close()
+
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
 
 	for {
-		select{
+		select {
 		case <-done:
-			return 
-		case  <-ticker.C:
-			
+			return
+		case <-ticker.C:
+
 			fmt.Println("doing this again")
 			// err := c.WriteMessage(websocket.TextMessage, []byte(t.String()))
 			// if err != nil{
 			// 	log.Println("write:", err)
 			// 	return
-			// }
-			err= binary.Write(buffer2,binary.BigEndian, &buffer)
-			chk(err,4)
+			// }]s
+			stream.Read()
+			err = binary.Write(buffer2, binary.BigEndian, &buffer)
+			chk(err, 4)
 			// fmt.Println(buffer2.Bytes())
 			sEnc := base64.StdEncoding.EncodeToString([]byte(buffer2.Bytes()))
 			// fmt.Println(sEnc)
 			message := fmt.Sprintf(`{"event":"media", "media":{"payload":"%s"}}`, sEnc)
-			fmt.Println(message)
 			err = c.WriteMessage(websocket.TextMessage, []byte(message))
 			buffer2.Reset()
-			chk(err,5)
+			chk(err, 5)
 
 		case <-interrupt:
 			log.Println("interrupt")
 			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			chk(err,6)
-			select{
+			chk(err, 6)
+			select {
 			case <-done:
 			case <-time.After(time.Second):
 			}
@@ -102,7 +103,6 @@ func main(){
 		}
 	}
 }
-
 
 func chk(err error, n int64) {
 	if err != nil {
